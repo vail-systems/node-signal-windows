@@ -18,13 +18,18 @@ var Framer = function (options) {
 Framer.prototype = {
     frame: function(buffer, callback) {
         console.log('entering frame');
-        console.log('buffer: ' + buffer);
-        console.log('callback: ' + JSON.stringify(callback));
+        console.log('buffer.length: ' + buffer.length);
+        console.log(callback ? "callback exists" : "no callback");
         var self = this,
             cb = this.offset,
             frame = [];
 
+        console.log('cb: ' + cb + ', buffer.length: ' + buffer.length);
+        console.log('this.stepS: ' + this.stepS + ', buffer.length: ' + buffer.length);
+
         while (cb < buffer.length) {
+            console.log('cb: ' + cb + ', buffer.length: ' + buffer.length);
+
             if (this.map) frame.push(this.map[buffer.readUInt8(cb)]);
             else frame.push(buffer.readUInt8(cb));
 
@@ -35,6 +40,7 @@ Framer.prototype = {
                         return s * self.scale[ix];
                     });
 
+                console.log("should callback now");
                 callback(frame, this.fIx);
                 frame = [];
                 cb -= (this.sizeS - this.stepS);
