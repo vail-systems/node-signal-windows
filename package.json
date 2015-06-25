@@ -1,0 +1,27 @@
+{
+  "name": "signal-windows",
+  "version": "0.0.1",
+  "description": "Node.js implementation of a framer and signal windowing functions.",
+  "license": "MIT",
+  "homepage": "https://github.com/vail-systems/node-signal-windows",
+  "repository": "vail-systems/node-signal-windows",
+  "contributors": [
+    "Joshua Jung <joshua.p.jung@gmail.com> (http://www.joshjung.com)",
+    "Ben Bryan <bbryan@vailsys.com>"
+  ],
+  "engines": {
+    "node": ">=0.12.0"
+  },
+  "main": "index.js",
+  "files": [
+    "index.js",
+    "src",
+    "test"
+  ],
+  "keywords": [
+    "framer",
+    "window function",
+    "hamming window",
+    "tukey window"
+  ]
+}

@@ -17,6 +17,9 @@ var Framer = function (options) {
 
 Framer.prototype = {
     frame: function(buffer, callback) {
+        console.log('entering frame');
+        console.log('buffer: ' + buffer);
+        console.log('callback: ' + JSON.stringify(callback));
         var self = this,
             cb = this.offset,
             frame = [];
