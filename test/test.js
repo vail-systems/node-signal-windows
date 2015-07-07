@@ -2,6 +2,17 @@ var assert = require('assert'),
     Framer = require('../').framer,
     windows = require('../').windows;
 
+describe('Windows', function () {
+  describe('Hamming', function () {
+    it('should have proper length and start and end should be equal.', function () {
+      var ham = windows.construct('ham', 100);
+
+      assert.equal(ham.length, 100);
+      assert.equal(ham[0], ham[99]);
+    });
+  });
+});
+
 describe('Framer', function() {
     var expFrames1 = [[1,2,3,4],
                       [2,3,4,5],
