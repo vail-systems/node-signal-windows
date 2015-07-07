@@ -1,54 +1,60 @@
 /*===========================================================================*\
- * Framer for breaking buffer into windows of a particular size at an
- * arbitrary step.
+ * Framer for breaking a U-Law ByteBuffer or Array into windows of a particular
+ * size at an arbitrary step.
  *
  * (c) Vail Systems. Joshua Jung and Ben Bryan. 2015
 \*===========================================================================*/
 var Framer = function (options) {
-    options = options || {};
+  options = options || {};
 
-    this.fIx = 0;
-    this.sizeS = options.sizeS || 64;
-    this.stepS = options.stepS || this.sizeS;
-    this.map = options.map || undefined;
-    this.scale = options.scale || undefined;
-    this.offset = options.offset || 0;
+  this.frameIx = 0;
+  this.frameSize = options.frameSize || 64;
+  this.stepSize = options.stepSize|| this.frameSize;
+  this.map = options.map || undefined;
+  this.scale = options.scale || undefined;
+  this.offset = options.offset ? options.offset : 0;
+  this.sampleType = options.sampleType || 'UInt8';
 };
 
 Framer.prototype = {
-    frame: function(buffer, callback) {
-        console.log('entering frame');
-        console.log('buffer.length: ' + buffer.length);
-        console.log(callback ? "callback exists" : "no callback");
-        var self = this,
-            cb = this.offset,
-            frame = [];
+  /**
+   * Frames a buffer of single-byte char values or an array of Numbers into windows of the specified size.
+   */
+  frame: function(bufferOrArray, callback) {
+    var self = this,
+        ix = this.offset,
+        frame = [],
+        isArray = Object.prototype.toString.call( bufferOrArray) === '[object Array]';
 
-        console.log('cb: ' + cb + ', buffer.length: ' + buffer.length);
-        console.log('this.stepS: ' + this.stepS + ', buffer.length: ' + buffer.length);
+    self.frameIx = 0;
 
-        while (cb < buffer.length) {
-            console.log('cb: ' + cb + ', buffer.length: ' + buffer.length);
+    while (ix < bufferOrArray.length) {
+      var value = isArray ? bufferOrArray[ix] : bufferOrArray['read' + self.sampleType](ix); 
 
-            if (this.map) frame.push(this.map[buffer.readUInt8(cb)]);
-            else frame.push(buffer.readUInt8(cb));
+      frame.push(this.map ? this.map[value] : value);
 
-            if (frame.length == this.sizeS)
-            {
-                if (this.scale)
-                    frame = frame.map(function (s, ix) {
-                        return s * self.scale[ix];
-                    });
+      if (frame.length == this.frameSize || ix+1 == bufferOrArray.length) finishFrame(frame);
 
-                console.log("should callback now");
-                callback(frame, this.fIx);
-                frame = [];
-                cb -= (this.sizeS - this.stepS);
-                this.fIx++;
-            }
-            cb++;
-        }
+      ix++;
     }
+
+    // Did we not process any frames at all for some reason?
+    if (this.frameIx == 0) callback(undefined);
+
+    function finishFrame(frame) {
+      if (this.scale) frame = frame.map(function (s, ix) {return s * self.scale[ix];});
+
+      callback(frame, self.frameIx);
+
+      if (ix != bufferOrArray.length - 1)
+      {
+          ix -= (self.frameSize - self.stepSize);
+
+          self.frameIx++;
+          frame.length = 0;
+      }
+    }
+  }
 };
 
 module.exports = Framer;
