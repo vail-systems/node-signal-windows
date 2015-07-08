@@ -9,11 +9,12 @@ var Framer = function (options) {
 
   this.frameIx = 0;
   this.frameSize = options.frameSize || 64;
-  this.stepSize = options.stepSize|| this.frameSize;
+  this.frameStep = options.frameStep|| this.frameSize;
   this.map = options.map || undefined;
   this.scale = options.scale || undefined;
   this.offset = options.offset ? options.offset : 0;
   this.sampleType = options.sampleType || 'UInt8';
+  this.wordSize = options.wordSize || 1;
 };
 
 Framer.prototype = {
@@ -33,9 +34,9 @@ Framer.prototype = {
 
       frame.push(this.map ? this.map[value] : value);
 
-      if (frame.length == this.frameSize || ix+1 == bufferOrArray.length) finishFrame(frame);
+      if (frame.length == this.frameSize || ix+self.wordSize == bufferOrArray.length) finishFrame(frame);
 
-      ix++;
+      ix += self.wordSize;
     }
 
     // Did we not process any frames at all for some reason?
@@ -46,9 +47,9 @@ Framer.prototype = {
 
       callback(frame, self.frameIx);
 
-      if (ix != bufferOrArray.length - 1)
+      if (ix != bufferOrArray.length - self.wordSize)
       {
-          ix -= (self.frameSize - self.stepSize);
+          ix -= (self.frameSize - self.frameStep) * self.wordSize;
 
           self.frameIx++;
           frame.length = 0;

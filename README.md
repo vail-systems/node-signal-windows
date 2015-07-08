@@ -1,35 +1,78 @@
 # node-signal-windows
-Node.js implementation of a framer to generate sample windows, and window functions to operate on those windows in the context of DSP applications.  For now we only have the Hamming window, Tukey, and rectangular window but this may be expanded to include others.
+Node.js implementation of a sample framer to break a stream of audio samples into discrete sets for easy processing of FFT. Also includes a few window functions like Hamming.
 
 # Introduction
-The framer included in this package is designed to frame samples to a given window size and pass each window to a callback.
+The framer included in this package is designed to frame a collection of samples to a given size and pass each frame to a callback.
 
-The windowing functions are used for things like minimizing spectral leakage when processing a given window with the FFT. Windowing functions and their characteristics, can be found [here](https://en.wikipedia.org/wiki/Window_function).
+The optional windowing functions are used for things like minimizing spectral leakage when processing a given frame with the Fast Fourier Transform. Windowing functions and their characteristics can be found [here](https://en.wikipedia.org/wiki/Window_function).
 
-# Window Function Example
+# Windowing Function Example
 
     var windows = require('signal-windows').windows,
         signal = [1,1,1,1,1];
 
+    // Returns an Array of signal.length coefficients by which you can scale a set of samples
     var hamCoef = windows.construct('ham', signal.length);
 
-    console.log(hamCoef); // Output all the coefficients (should start low, increase, and return to low)
+    console.log(hamCoef); // Output all the coefficients
 
-# Framer Example
+# Framer Example (Array)
 
     var Framer = require(signal-windows').Framer,
-        frame = new Framer({
-          sizeS: 4, 
-          stepS: 2
-        }).frame,
+        framer = new Framer({
+          frameSize: 4, 
+          frameStep: 2
+        }),
         signal = [1,2,3,4,5,6,7,8];
 
-    frame(signals, console.log); // [1,2,3,4]
-                                 // [3,4,5,6]
-                                 // [5,6,7,8]
-                                 // [7,8]
+    framer.frame(signals, console.log); // [1,2,3,4]
+                                        // [3,4,5,6]
+                                        // [5,6,7,8]
+                                        // [7,8]
+                                        
+# Framer Example (ByteBuffer)
 
-Note: if the buffer size modulus the frame size is not 0, it is your responsibility to either pad the frame with 0s before passing into an FFT or to save the remaining samples and prepend them to the next buffer.
+    var Framer = require(signal-windows').Framer,
+        framer = new Framer({
+          frameSize: 4, 
+          frameStep: 2,
+          sampleType: 'UInt8', // See Buffer read methods for types available (e.g. UInt16LE, UInt16BE, etc.) 
+          wordSize: 1          // wordSize is number of octets represent a single value
+        }),
+        signal = new Buffer([1,2,3,4,5,6,7,8]);
+
+    framer.frame(signals, console.log); // [1,2,3,4]
+                                        // [3,4,5,6]
+                                        // [5,6,7,8]
+                                        // [7,8]
+
+# Special Considerations
+
+If the buffer size modulus the frame size is not 0, it is your responsibility to either pad the frame with '0's before passing into an FFT or to save the remaining samples and prepend them to the next buffer.
+
+# Testing
+
+`mocha`
+
+    Windows
+    Hamming
+    ✓ should have proper length and start and end should be equal.
+
+    Framer
+    Step size 1, frame size 4
+    ✓ Array
+    ✓ Buffer
+    Step size 1, frame size 4, Custom Buffer Types
+    ✓ Buffer UInt16LE
+    ✓ Buffer UInt16LE
+    Step size 2, frame size 4
+    ✓ Array
+    ✓ Buffer
+    Step size 2, frame size 4, trailing samples
+    ✓ Array
+    ✓ Buffer
+
+    9 passing (16ms)
 
 # License 
 
